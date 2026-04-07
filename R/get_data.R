@@ -98,6 +98,7 @@ get_data <- function(
   # Only set up for abcds right now
   if (study == "abcds" & apply_labels) {
     data <- apply_labels(data, abcds, !!codebook)
+    variables <- c(variables, setdiff(colnames(data), c(ids, variables)))
   }
 
   return(data[, c(ids, variables)])
