@@ -87,6 +87,7 @@ get_demographics <- function(
 #' and the evaluation date (\code{de_eval_date}).
 #'
 #' @param data A dataset exported from the ATRI API for which to add an age_at_visit variable
+#' @param controls A boolean value that indicates whether the function should return the controls, Default: FALSE
 #'
 #' @return
 #' A data frame or \code{\link[tibble]{tibble}} with participant identifiers and
@@ -113,9 +114,9 @@ get_demographics <- function(
 #' @rdname calculate_age_at_visit
 #' @export
 
-calculate_age_at_visit <- function(data) {
+calculate_age_at_visit <- function(data, controls = FALSE) {
   ptdoby <-
-    get_demographics(ptdob, de_eval_date) |>
+    get_demographics(ptdob, de_eval_date, controls = controls) |>
     dplyr::arrange(.data$subject_label, .data$event_code) |>
     tidyr::fill(.data$ptdob, .by = "subject_label", .direction = "down") |>
     dplyr::mutate(
