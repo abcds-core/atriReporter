@@ -1,63 +1,63 @@
-task,variable,formulas
-ntgedsd,nttotal,adltot + ntlctot + ntswtot + ntambtot + ntmemtot + ntbehtot + ntsrptot + ntootot
-ntgedsd,nt6d,adltot + ntlctot + ntswtot + ntambtot + ntmemtot + ntbehtot
-dld,dldcs,dld1 + dld2 + dld3
-dld,dldss,dld4 + dld5 + dld6 + dld7 + dld8
-npi,npi_t2,npi_delds + npi_halds + npi_aggds + npi_depds + npi_anxds + npi_elads + npi_apads + npi_disds + npi_irrds + npi_abbds + npi_slpds + npi_appds
-reiss,reisstot,aggrr + anxr + attnr + bodyr + compr + confr + cryr + delur + depdr + destr + eatpr + fearr + hallr + hostr + impur + inatr + lower + nonar + ovser + parar + regbr + sadnr + slppr + socir + temptr + withr
-reiss,aggsum,aggrr + destr + hostr + impur + temptr
-reiss,autsum,echor + objar + ssbr + unmmr + withr
-reiss,reisspsy,confr + delur + hallr + parar + socir
-reiss,reissparan,compr + hallr + hostr + ovser + parar
-reiss,reissdepb,anxr + cryr + fearr + ovser + sadnr
-reiss,reissdepp,bodyr + eatpr + lower + regbr + slppr
-reiss,reissdpb,anxr + attnr + bodyr + compr + depdr
-reiss,reissav,inatr + lower + nonar + socir + withr
-dsmse,colmemscr,colshbx + dsme1
-dsmse,nonmemory,dspi1 + dsap1 + dsla2 + dsvs1 + dske1
-dsmse,dsmse_to2,dsto2 - colshbx
-dsmse,dsmse_to2,dspi1 + dsme1 + dsap1 + dsla2 + dsvs1 + dske1
-dsmse,dsto2,dspi1 + colshbx + dsme1 + dsap1 + dsla2 + dsvs1 + dske1
-dsmse,dsto2,colmemscr + nonmemory
-recall,frssa,frt1sa + frt2sa + frt3sa
-recall,crssa,crt1sa + crt2sa + crt3sa
-recall,trssa,frssa + crssa
-recall,frcr1sa,frt1sa + crt1sa
-recall,frcr2sa,frt2sa + crt2sa
-recall,frcr3sa,frt3sa + crt3sa
-recall,trssa,frcr1sa + frcr2sa + frcr3sa
-recall,ticrsa,ict1sa + ict2sa + ict3sa
-recall,tifrsa,ift1sa + ift2sa + ift3sa
-recall,tifrrepssa,ift1rsa + ift2rsa + ift3rsa
-recall,agfrin1sa,ift1sa + ift1rsa
-recall,agfrin2sa,ift2sa + ift2rsa
-recall,agfrin3sa,ift3sa + ift3rsa
-recall,tafisa,agfrin1sa + agfrin2sa + agfrin3sa
-recall,tafisa,tifrsa + tifrrepssa
-recall,frssb,frt1sb + frt2sb + frt3sb
-recall,crssb,crt1sb + crt2sb + crt3sb
-recall,trssb,frssb + crssb
-recall,frcr1sb,frt1sb + crt1sb
-recall,frcr2sb,frt2sb + crt2sb
-recall,frcr3sb,frt3sb + crt3sb
-recall,trssb,frcr1sb + frcr2sb + frcr3sb
-recall,ticrsb,ict1sb + ict2sb + ict3sb
-recall,tifrsb,ift1sb + ift2sb + ift3sb
-recall,tifrrepssb,ift1rsb + ift2rsb + ift3rsb
-recall,agfrin1sb,ift1sb + ift1rsb
-recall,agfrin2sb,ift2sb + ift2rsb
-recall,agfrin3sb,ift3sb + ift3rsb
-recall,tafisb,agfrin1sb + agfrin2sb + agfrin3sb
-recall,tafisb,tifrsb + tifrrepssb
-iq,kbit2verbraw,kbit2verbkraw + kbit2ridraw
-cancellation,totcorr,tacorr + hscorr + plcorr + lacorr
-cancellation,totomiss,taomiss + hsomiss + plomiss + laomiss
-cancellation,totcomiss,tacomiss + hscomiss + plcomiss + lacomiss
-cancellation,tottime,tatime + hstime + pltime + latime
-verbal,vftotnepraw,vfannepraw + vffdnepraw
-verbal,vftotneprep,vfanneprep + vffdneprep
-verbal,vftotnepnoc,vfannepnoc + vffdnepnoc
-verbal,vftotnepns,vfannepns + vffdnepns
-verbal,vftotexepr,vfanexepr + vffdexepr
-tbatgs,tbaba,tbagait + tbaslh + tbafc + tbass + tbasc + tbap + tbat + tbawt
-blockwisc,hwrssum,exbd + wisbd
+name,task,variable,formulas
+NTG/Study Partner Concerns,ntgedsd,nttotal,adltot + ntlctot + ntswtot + ntambtot + ntmemtot + ntbehtot + ntsrptot + ntootot
+NTG/Study Partner Concerns,ntgedsd,nt6d,adltot + ntlctot + ntswtot + ntambtot + ntmemtot + ntbehtot
+The Dementia Questionnaire for People with Learning Disabilities,dld,dldcs,dld1 + dld2 + dld3
+The Dementia Questionnaire for People with Learning Disabilities,dld,dldss,dld4 + dld5 + dld6 + dld7 + dld8
+Neuropsychiatric Inventory,npi,npi_t2,npi_delds + npi_halds + npi_aggds + npi_depds + npi_anxds + npi_elads + npi_apads + npi_disds + npi_irrds + npi_abbds + npi_slpds + npi_appds
+Reiss Screen for Maladaptive Behavior,reiss,reisstot,aggrr + anxr + attnr + bodyr + compr + confr + cryr + delur + depdr + destr + eatpr + fearr + hallr + hostr + impur + inatr + lower + nonar + ovser + parar + regbr + sadnr + slppr + socir + temptr + withr
+Reiss Screen for Maladaptive Behavior,reiss,aggsum,aggrr + destr + hostr + impur + temptr
+Reiss Screen for Maladaptive Behavior,reiss,autsum,echor + objar + ssbr + unmmr + withr
+Reiss Screen for Maladaptive Behavior,reiss,reisspsy,confr + delur + hallr + parar + socir
+Reiss Screen for Maladaptive Behavior,reiss,reissparan,compr + hallr + hostr + ovser + parar
+Reiss Screen for Maladaptive Behavior,reiss,reissdepb,anxr + cryr + fearr + ovser + sadnr
+Reiss Screen for Maladaptive Behavior,reiss,reissdepp,bodyr + eatpr + lower + regbr + slppr
+Reiss Screen for Maladaptive Behavior,reiss,reissdpb,anxr + attnr + bodyr + compr + depdr
+Reiss Screen for Maladaptive Behavior,reiss,reissav,inatr + lower + nonar + socir + withr
+Down Syndrome Mental Status Exam,dsmse,colmemscr,colshbx + dsme1
+Down Syndrome Mental Status Exam,dsmse,nonmemory,dspi1 + dsap1 + dsla2 + dsvs1 + dske1
+Down Syndrome Mental Status Exam,dsmse,dsmse_to2,dsto2 - colshbx
+Down Syndrome Mental Status Exam,dsmse,dsmse_to2,dspi1 + dsme1 + dsap1 + dsla2 + dsvs1 + dske1
+Down Syndrome Mental Status Exam,dsmse,dsto2,dspi1 + colshbx + dsme1 + dsap1 + dsla2 + dsvs1 + dske1
+Down Syndrome Mental Status Exam,dsmse,dsto2,colmemscr + nonmemory
+Cued Recall,recall,frssa,frt1sa + frt2sa + frt3sa
+Cued Recall,recall,crssa,crt1sa + crt2sa + crt3sa
+Cued Recall,recall,trssa,frssa + crssa
+Cued Recall,recall,frcr1sa,frt1sa + crt1sa
+Cued Recall,recall,frcr2sa,frt2sa + crt2sa
+Cued Recall,recall,frcr3sa,frt3sa + crt3sa
+Cued Recall,recall,trssa,frcr1sa + frcr2sa + frcr3sa
+Cued Recall,recall,ticrsa,ict1sa + ict2sa + ict3sa
+Cued Recall,recall,tifrsa,ift1sa + ift2sa + ift3sa
+Cued Recall,recall,tifrrepssa,ift1rsa + ift2rsa + ift3rsa
+Cued Recall,recall,agfrin1sa,ift1sa + ift1rsa
+Cued Recall,recall,agfrin2sa,ift2sa + ift2rsa
+Cued Recall,recall,agfrin3sa,ift3sa + ift3rsa
+Cued Recall,recall,tafisa,agfrin1sa + agfrin2sa + agfrin3sa
+Cued Recall,recall,tafisa,tifrsa + tifrrepssa
+Cued Recall,recall,frssb,frt1sb + frt2sb + frt3sb
+Cued Recall,recall,crssb,crt1sb + crt2sb + crt3sb
+Cued Recall,recall,trssb,frssb + crssb
+Cued Recall,recall,frcr1sb,frt1sb + crt1sb
+Cued Recall,recall,frcr2sb,frt2sb + crt2sb
+Cued Recall,recall,frcr3sb,frt3sb + crt3sb
+Cued Recall,recall,trssb,frcr1sb + frcr2sb + frcr3sb
+Cued Recall,recall,ticrsb,ict1sb + ict2sb + ict3sb
+Cued Recall,recall,tifrsb,ift1sb + ift2sb + ift3sb
+Cued Recall,recall,tifrrepssb,ift1rsb + ift2rsb + ift3rsb
+Cued Recall,recall,agfrin1sb,ift1sb + ift1rsb
+Cued Recall,recall,agfrin2sb,ift2sb + ift2rsb
+Cued Recall,recall,agfrin3sb,ift3sb + ift3rsb
+Cued Recall,recall,tafisb,agfrin1sb + agfrin2sb + agfrin3sb
+Cued Recall,recall,tafisb,tifrsb + tifrrepssb
+ABC-DS IQ Worksheet,iq,kbit2verbraw,kbit2verbkraw + kbit2ridraw
+Cancellation Task,cancellation,totcorr,tacorr + hscorr + plcorr + lacorr
+Cancellation Task,cancellation,totomiss,taomiss + hsomiss + plomiss + laomiss
+Cancellation Task,cancellation,totcomiss,tacomiss + hscomiss + plcomiss + lacomiss
+Cancellation Task,cancellation,tottime,tatime + hstime + pltime + latime
+Verbal Fluency,verbal,vftotnepraw,vfannepraw + vffdnepraw
+Verbal Fluency,verbal,vftotneprep,vfanneprep + vffdneprep
+Verbal Fluency,verbal,vftotnepnoc,vfannepnoc + vffdnepnoc
+Verbal Fluency,verbal,vftotnepns,vfannepns + vffdnepns
+Verbal Fluency,verbal,vftotexepr,vfanexepr + vffdexepr
+Tinetti Assessment Tool:  Gait Test,tbatgs,tbaba,tbagait + tbaslh + tbafc + tbass + tbasc + tbap + tbat + tbawt
+Block Design,blockwisc,hwrssum,exbd + wisbd
