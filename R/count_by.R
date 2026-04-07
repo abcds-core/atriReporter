@@ -40,7 +40,7 @@ count_by <- function(data, id, ..., column, value = 1) {
       values_from = .data$total,
       values_fill = 0
     ) %>%
-    dplyr::filter(dplyr::if_any(c(...), ~ !is.na(.x))) %>%
+    dplyr::filter(dplyr::if_any(dplyr::everything(), ~ !is.na(.x))) %>%
     dplyr::mutate(variable = rlang::as_label(rlang::enquo(column)), .before = 1)
 }
 
