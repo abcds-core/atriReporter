@@ -48,6 +48,7 @@ get_blood <- function(
 ) {
   variables <- as.character(rlang::ensyms(...))
   get_data(
+    study = "abcds",
     dataset = "bloodcoll",
     codebook = "bloodcoll",
     variables,
