@@ -4,10 +4,12 @@
 \alias{calculate_age_at_visit}
 \title{Calculate Age at Visit}
 \usage{
-calculate_age_at_visit(data)
+calculate_age_at_visit(data, controls = FALSE)
 }
 \arguments{
 \item{data}{A dataset exported from the ATRI API for which to add an age_at_visit variable}
+
+\item{controls}{A boolean value that indicates whether the function should return the controls, Default: FALSE}
 }
 \value{
 A data frame or \code{\link[tibble]{tibble}} with participant identifiers and
