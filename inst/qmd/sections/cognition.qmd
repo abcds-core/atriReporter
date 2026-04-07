@@ -17,7 +17,7 @@ cognition_map <-
     "verbal"         , "cogverbal_done"     , "Verbal Fluency"           ,
   )
 
-cognition <- purrr::map2(
+cogATRI <- purrr::map2(
   cognition_map[["atri_task_names"]],
   cognition_map[["loni_variable_names"]],
   .f = function(x, y) {
@@ -26,29 +26,24 @@ cognition <- purrr::map2(
   }
 )
 
-id_vars <- atriReporter:::get_ids(cognition[[1]])
-
-atri_cognition <- purrr::reduce(cognition, dplyr::full_join, by = id_vars)
-
-atri_cognition$ids <- atri_cognition$subject_label
+id_vars <- atriReporter:::get_ids(cogATRI[[1]])
+cogATRI <- purrr::reduce(cogATRI, dplyr::full_join, by = id_vars)
+cogATRI$ids <- cogATRI$subject_label
 
 if (!is.null(params$lonidir)) {
-  loni_cognition <- abcds::read_cognitive(
-    Sys.getenv("ABCDS_LONI_DATA_DIRECTORY"),
-    person = "participants"
-  )
-
-  loni_cognition <- loni_cognition[c(
-    "subject_label",
-    "event_sequence",
-    cognition_map[["loni_variable_names"]]
-  )]
-
-  atri_cognition <- atriReporter:::loni_join(
-    atri_data = atri_cognition,
-    loni_data = loni_cognition,
-    variables = cognition_variables
-  )
+  cogATRI <- params$lonidir %>%
+    abcds::read_cognitive(
+      person = "participants"
+    ) %>%
+    dplyr::select(
+      subject_label:event_sequence,
+      cognition_map[["loni_variable_names"]]
+    ) %>%
+    atriReporter:::loni_join(
+      atri_data = cogATRI,
+      loni_data = .,
+      variables = cognition_variables
+    )
 }
 
 ```
@@ -64,32 +59,30 @@ atriReporter:::format_quarto(
   "subsection"
 )
 
-cognition_tasks <- atriReporter::multiple_count_by(
-  data = atri_cognition,
+cog_tasks <- atriReporter::multiple_count_by(
+  data = cogATRI,
   names = cognition_map[["loni_variable_names"]],
   labels = cognition_map[["cognition_labels"]],
   ids = "ids",
   varname = "Cognition Task"
 )
 
-cogtime <- as.numeric(colnames(cognition_tasks)[
-  2:ncol(cognition_tasks)
-])
+cog_time <- as.numeric(colnames(cog_tasks)[2:ncol(cog_tasks)])
 
-cognition_tasks_footnote <- paste(
-  glue::glue("Numbers {min(cogtime)} to {max(cogtime)}"),
+cog_tasks_footnote <- paste(
+  glue::glue("Numbers {min(cog_time)} to {max(cog_time)}"),
   "show how many participants completed at least that many visits."
 )
 
-cognition_tasks %>%
+cog_tasks %>%
   flextable::flextable() %>%
   atriReporter:::ft_add_abcds_theme() %>%
   flextable::add_footer_row(
-    values = cognition_tasks_footnote,
-    colwidths = ncol(cognition_tasks)
+    values = cog_tasks_footnote,
+    colwidths = ncol(cog_tasks)
   ) %>%
   flextable::width(j = 1, width = 1.5) %>%
-  flextable::width(j = 2:(max(cogtime) + 1), width = 3.5 / max(cogtime))
+  flextable::width(j = 2:(max(cog_time) + 1), width = 3.5 / max(cog_time))
 
 atriReporter:::format_quarto(type = "newpage")
 

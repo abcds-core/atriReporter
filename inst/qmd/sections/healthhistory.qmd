@@ -392,3 +392,4 @@ create_bmi_table(bmi, de_gender == "Female")
 ```
 
 
+\newpage

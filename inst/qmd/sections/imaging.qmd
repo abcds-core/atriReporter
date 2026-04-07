@@ -15,6 +15,7 @@ count_imaging <- function(
       .f = function(x) {
         img <- atriReporter::get_imaging(
           done,
+          study = "abcds",
           imaging = x,
           controls = controls
         )
@@ -29,17 +30,12 @@ count_imaging <- function(
   atri_imaging <- purrr::reduce(atri_imaging, dplyr::full_join, by = id_vars)
   atri_imaging$ids <- atri_imaging$subject_label
 
-  if (controls) {
-    person <- "controls"
-  } else {
-    person <- "participants"
-  }
-
-  if (!is.null(lonidir)) {
+  if (!is.null(params$lonidir)) {
     loni_imaging <- purrr::map(
       atriReporter:::.imaging_key[["loni_scan_names"]],
       .f = function(x) {
-        img <- abcds::read_imaging(person = person, scan = x)
+        # fmt: skip
+        img <- abcds::read_imaging(type = !!x, directory = params$lonidir, controls = controls)
         img <- img[, c("subject_label", "event_sequence", paste0(x, "_done"))]
         return(img)
       }
@@ -69,14 +65,7 @@ count_imaging <- function(
     varname = "Imaging Scan"
   )
 
-  person <- paste0(
-    toupper(substr(person, 1, 1)),
-    tolower(substr(person, 2, nchar(person)))
-  )
-
-  if (person == "Controls") {
-    person <- "Sibling Controls"
-  }
+  person <- ifelse(controls, "Sibling Controls", "Participants")
 
   return(dplyr::bind_cols(Person = person, imaging_scan_counts))
 }
@@ -140,74 +129,52 @@ atriReporter:::format_quarto("MRI Sequences by Number of Scans", "subsection")
 # controls = TRUE
 
 count_mri_sequencing <- function(controls = FALSE, lonidir = NULL) {
-  atri_mri_imaging <- atriReporter::get_mri_sequences(
-    name = "description",
-    controls = controls,
-    apply_labels = TRUE
-  )
+  mriATRI <-
+    atriReporter::get_mri_sequences(
+      name = "description",
+      controls = controls,
+      apply_labels = TRUE
+    )
 
-  atri_mri_imaging$ids <- atri_mri_imaging$subject_label
-
-  if (controls) {
-    person <- "controls"
-  } else {
-    person <- "participants"
-  }
+  mriATRI$ids <- mriATRI$subject_label
 
   if (!is.null(lonidir)) {
-    loni_mri_imaging <- abcds::read_imaging(
-      lonidir,
-      person = person,
-      scan = "mri"
-    )
-
-    loni_mri_imaging <- loni_mri_imaging[, c(
-      "subject_label",
-      "event_sequence",
-      "mri_done",
-      "mrseqs"
-    )]
-
-    loni_mri_imaging <- abcds::apply_factor_labels(loni_mri_imaging)
-
-    mri_columns <- c(
-      "mri_done",
-      "mrseqs",
-      atriReporter:::.mri_sequence_key[["description"]]
-    )
-
-    atri_mri_imaging <- atriReporter:::loni_join(
-      atri_data = atri_mri_imaging,
-      loni_data = loni_mri_imaging,
-      variables = mri_columns
-    ) %>%
+    # fmt: skip
+    mricols <- c("mri_done", "mrseqs", atriReporter:::.mri_sequence_key[["description"]])
+    mriATRI <-
+      lonidir %>%
+      abcds::read_imaging(
+        type = "mri",
+        directory = .,
+        controls = controls
+      ) %>%
+      dplyr::select(subject_label, event_sequence, mri_done, mrseqs) %>%
+      abcds::apply_factor_labels() %>%
+      atriReporter:::loni_join(
+        atri_data = mriATRI,
+        loni_data = .,
+        variables = mricols
+      ) %>%
       dplyr::arrange(ids, event_code, event_sequence) %>%
       dplyr::group_by(ids, event_code) %>%
       dplyr::filter(!duplicated(u19_bds_id, event_code))
   }
 
   mri_sequences <- atriReporter::multiple_count_by(
-    data = atri_mri_imaging,
+    data = mriATRI,
     names = atriReporter:::.mri_sequence_key[["description"]],
     labels = atriReporter:::.mri_sequence_key[["abbreviation"]],
     ids = "ids",
     varname = "MRI Sequence"
   )
 
-  person <- paste0(
-    toupper(substr(person, 1, 1)),
-    tolower(substr(person, 2, nchar(person)))
-  )
-
-  if (person == "Controls") {
-    person <- "Sibling Controls"
-  }
+  person <- ifelse(controls, "Sibling Controls", "Participants")
 
   return(dplyr::bind_cols(Person = person, mri_sequences))
 }
 
 if (params$mri_sequence_counts & params$mri_sequence_counts_controls) {
-  mri_sequence_counts <- count_mri_sequencing(
+  mriseq_counts <- count_mri_sequencing(
     lonidir = params$lonidir
   ) %>%
     dplyr::bind_rows(count_mri_sequencing(
@@ -215,35 +182,33 @@ if (params$mri_sequence_counts & params$mri_sequence_counts_controls) {
       lonidir = Sys.getenv("ABCDS_LONI_DATA_DIRECTORY")
     ))
 } else if (params$mri_sequence_counts & !params$mri_sequence_counts_controls) {
-  mri_sequence_counts <- count_mri_sequencing(
+  mriseq_counts <- count_mri_sequencing(
     lonidir = params$lonidir
   )
 } else if (!params$mri_sequence_counts & params$mri_sequence_counts_controls) {
-  mri_sequence_counts <- count_mri_sequencing(
+  mriseq_counts <- count_mri_sequencing(
     controls = TRUE,
     lonidir = params$lonidir
   )
 }
 
-mritime <- as.numeric(colnames(mri_sequence_counts)[
-  3:ncol(mri_sequence_counts)
-])
+mri_time <- as.numeric(colnames(mriseq_counts)[3:ncol(mriseq_counts)])
 
 mri_sequences_counts_footnote <- paste(
-  glue::glue("Numbers {min(mritime)} to {max(mritime)}"),
+  glue::glue("Numbers {min(mri_time)} to {max(mri_time)}"),
   "show how many participants completed at least that many sequences."
 )
 
-mri_sequence_counts %>%
+mriseq_counts %>%
   flextable::as_grouped_data(groups = "Person") %>%
   flextable::as_flextable(hide_grouplabel = TRUE) %>%
   atriReporter:::ft_add_abcds_theme(grouped_column = TRUE) %>%
   flextable::add_footer_row(
     values = mri_sequences_counts_footnote,
-    colwidths = (max(mritime) + 1)
+    colwidths = (max(mri_time) + 1)
   ) %>%
   flextable::width(j = 1, width = 2) %>%
-  flextable::width(j = 2:(max(mritime) + 1), width = 3 / max(mritime)) %>%
+  flextable::width(j = 2:(max(mri_time) + 1), width = 3 / max(mri_time)) %>%
   flextable::bold(i = ~ !is.na(Person))
 
 atriReporter:::format_quarto(type = "newpage")
@@ -260,13 +225,16 @@ atriReporter:::format_quarto(type = "newpage")
 atriReporter:::format_quarto("Amyloid PET Scans by Site", "subsection")
 
 atri_imaging <-
-  purrr::map(imaging_map[["atri_scan_names"]], .f = function(x) {
-    img <- atriReporter::get_imaging(done, imaging = x)
-    img$done <- as.numeric(img$done)
-    doneindx <- which(colnames(img) == "done")
-    colnames(img)[doneindx] <- paste0(gsub("meta", "", x), "_done")
-    return(img)
-  })
+  purrr::map(
+    atriReporter:::.imaging_key[["atri_scan_names"]],
+    .f = function(x) {
+      img <- atriReporter::get_imaging(done, study = "abcds", imaging = x)
+      img$done <- as.numeric(img$done)
+      doneindx <- which(colnames(img) == "done")
+      colnames(img)[doneindx] <- paste0(gsub("meta", "", x), "_done")
+      return(img)
+    }
+  )
 
 id_vars <- atriReporter:::get_ids(atri_imaging[[1]])
 atri_imaging <- purrr::reduce(atri_imaging, dplyr::full_join, by = id_vars)

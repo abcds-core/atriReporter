@@ -7,36 +7,7 @@
 
 atriReporter:::format_quarto("Enrollment by Year", "subsection")
 
-atri_registry <- atriReporter::get_registry(examdate, apply_labels = TRUE)
-
-atri_registry$event_label <- gsub(
-  " - Month [0-9]{1,2}",
-  "",
-  atri_registry$event_label
-)
-
-enrollment_tbl <- atri_registry %>%
-  dplyr::mutate(
-    Year = format(as.Date(examdate), "%Y"),
-    Year = ifelse(is.na(Year), "Unknown Date", Year)
-  ) %>%
-  dplyr::group_by(Year) %>%
-  dplyr::count(event_label) %>%
-  tidyr::pivot_wider(
-    names_from = event_label,
-    values_from = n,
-    values_fill = 0
-  )
-
-data.frame(
-  Year = "Total",
-  Cycle = unique(atri_registry$event_label),
-  Value = colSums(enrollment_tbl[2:5])
-) %>%
-  tidyr::pivot_wider(names_from = Cycle, values_from = Value) %>%
-  rbind(enrollment_tbl, .) %>%
-  flextable::flextable() %>%
-  atriReporter:::ft_add_abcds_theme() %>%
+atriReporter::create_registry_table() %>%
   flextable::width(j = 1, width = 1.25) %>%
   flextable::width(j = 2:5, width = 1)
 
@@ -51,35 +22,29 @@ atriReporter:::format_quarto(type = "newpage")
 #| eval: !expr (params$demographics) | (params$enrollment_by_cycle)
 #| results: asis
 
-demographic_variables <- c(
-  "age_at_visit",
-  "de_race",
-  "de_gender",
-  "de_ethnicity"
-)
+# params <- list(); params$lonidir <- "/Users/bhelsel/Desktop/Data/ABCDS LONI DATA"
 
-atri_demographics <-
+demoVars <- c("de_race", "de_gender", "de_ethnicity")
+
+demoATRI <-
   atriReporter::get_demographics(
-    !!!demographic_variables,
-    site = NULL,
-    cycle = NULL,
-    apply_labels = TRUE
-  )
+    !!!demoVars
+  ) %>%
+  atriReporter::calculate_age_at_visit()
 
 if (!is.null(params$lonidir)) {
-  loni_demographics <- abcds::read_demographics(
-    params$lonidir,
-    person = "participants",
-    simplify = TRUE
-  )
-
-  loni_demographics <- abcds::apply_factor_labels(loni_demographics)
-
-  atri_demographics <- atriReporter:::loni_join(
-    atri_data = atri_demographics,
-    loni_data = loni_demographics,
-    variables = demographic_variables
-  )
+  loniAGE <- abcds::read_age_at_event(params$lonidir)
+  demoATRI <-
+    params$lonidir %>%
+    abcds::read_simplified_demographics(
+      controls = FALSE
+    ) %>%
+    dplyr::full_join(loniAGE, by = c("subject_label", "event_sequence")) %>%
+    atriReporter:::loni_join(
+      atri_data = demoATRI,
+      loni_data = .,
+      variables = c(demoVars, "age_at_visit")
+    )
 }
 
 ```
@@ -92,29 +57,33 @@ if (!is.null(params$lonidir)) {
 
 atriReporter:::format_quarto("Demographics", "subsection")
 
-if ("u01_event_code" %in% names(atri_demographics)) {
-  baseline_demographics <- atri_demographics %>%
-    dplyr::filter(
-      (is.na(u01_event_code) & u19_event_code == "cyc1") |
-        (is.na(u19_event_code) & u01_event_code == "bl")
-    ) %>%
-    dplyr::arrange(ids, event_code) %>%
-    dplyr::group_by(ids) %>%
-    dplyr::summarise(dplyr::across(dplyr::everything(), dplyr::first))
+if ("u01_event_code" %in% names(demoATRI)) {
+  u19bl1 <- (is.na(demoATRI$u01_event_code) & demoATRI$u19_event_code == "cyc1") # U19 In LONI
+  u19bl2 <- (demoATRI$event_code == "cyc1" & is.na(demoATRI$u19_event_code)) # U19 not in LONI
+  u01bl <- (is.na(demoATRI$u19_event_code) & demoATRI$u01_event_code == "bl") # U01
+  baseDEMO <- demoATRI[u19bl1 | u19bl2 | u01bl, ]
+  baseDEMO <- baseDEMO[order(baseDEMO$ids, baseDEMO$event_code), ]
+  baseDEMO <- dplyr::summarise(
+    baseDEMO,
+    dplyr::across(de_race:age_at_visit, \(x) dplyr::first(x, na_rm = TRUE)),
+    .by = ids
+  )
 } else {
-  baseline_demographics <- atri_demographics %>%
-    dplyr::filter(event_code == "cyc1")
+  baseDEMO <- demoATRI %>%
+    dplyr::filter(event_code == "cyc1") %>%
+    dplyr::rename(ids = subject_label)
 }
 
 
-baseline_demographics %>%
+baseDEMO %>%
+  abcds::apply_factor_labels(ids = "ids") %>%
   dplyr::mutate(de_race = "") %>%
   dplyr::select(
     age_at_visit,
     de_gender,
     de_ethnicity,
     de_race,
-    White:`Native Hawaiian/Other Pacific Islander`
+    White:`American Indian/Alaskan Native`
   ) %>%
   dplyr::select(dplyr::where(~ !(all(. %in% c(0, NA))))) %>%
   dplyr::mutate(dplyr::across(dplyr::where(is.factor), forcats::fct_drop)) %>%
@@ -133,7 +102,7 @@ baseline_demographics %>%
   dplyr::filter(.[[1]] != "") %>%
   flextable::flextable() %>%
   flextable::set_header_labels(
-    values = c("Variable", paste0("N = ", nrow(baseline_demographics)))
+    values = c("Variable", paste0("N = ", nrow(baseDEMO)))
   ) %>%
   atriReporter:::ft_add_abcds_theme() %>%
   flextable::bold(i = c(1:2, 5:6), j = 1) %>%
