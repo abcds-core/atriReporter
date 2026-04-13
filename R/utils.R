@@ -340,7 +340,7 @@ get_sibling_controls <- function() {
   data <- import_atri_file(abcds, files, control)
   sibling_control_identifiers <- data[
     data$dd_field_name == "sibptid1",
-    "dd_revision_field_value",
+    "subject_label",
     drop = TRUE
   ]
   return(sibling_control_identifiers)
