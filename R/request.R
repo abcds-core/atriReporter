@@ -335,15 +335,22 @@ post_atri_files <- function(
   token <- get_atri_token(!!study)
   # s3_archive, s3_topic, topics
   topic <- rlang::ensym(topic)
-  # data_lake, data_pond_brain_health_report
+  # data_lake, data_pond_brain_health_report, transfer-kansas-brain-health-report
   topic_code <- rlang::ensym(topic_code)
 
   # Check for existing file
-  existing <- get_atri_files(!!study, !!topic, !!topic_code, site = site)
-  indx <- which(existing$label == label)
-  code <- existing[["code"]][indx]
+  code <- tryCatch(
+    {
+      existing <- get_atri_files(!!study, !!topic, !!topic_code, site = site)
+      indx <- which(existing$label == label)
+      existing[["code"]][indx]
+    },
+    error = function(e) {
+      return(NULL)
+    }
+  )
 
-  if (!rlang::is_empty(code)) {
+  if (!is.null(code)) {
     server <- get_atri_server(!!study, files, !!code)
     message(server)
     body <- list(
@@ -361,7 +368,7 @@ post_atri_files <- function(
       site_code = site,
       label = label,
       description = description,
-      source_file = curl::form_file(source_file, type = "application/pdf"),
+      source_file = curl::form_file(source_file, type = "application/pdf")
     )
   }
 
