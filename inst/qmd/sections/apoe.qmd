@@ -7,7 +7,7 @@
 
 atriReporter:::format_quarto("APOE Data from LONI", type = "subsection")
 
-apoe <- abcds::read_apoe(Sys.getenv("ABCDS_LONI_DATA_DIRECTORY"), )
+apoe <- abcds::read_apoe(Sys.getenv("ABCDS_LONI_DATA_DIRECTORY"))
 
 apoe %>%
   dplyr::count(allele_combo) %>%
