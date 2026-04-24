@@ -206,9 +206,11 @@ check_equations <- function(task, equations) {
 #'
 #' @seealso \code{\link{check_equations}} for the underlying validation logic.
 #'
-#' @importFrom purrr map walk
+#' @importFrom utils read.csv
+#' @importFrom atriReporter get_demographics
+#' @importFrom purrr map_dfr map walk
+#' @importFrom dplyr mutate relocate right_join
 #' @importFrom openxlsx createWorkbook addWorksheet writeData saveWorkbook
-#' @importFrom dplyr bind_rows
 #'
 #' @export
 
@@ -225,25 +227,30 @@ check_all_equations <- function(
 
   # fmt: skip
   sites <- c("UPITT", "UCISOM", "MGH", "WASHU", "UWI", "UKY", "NYSIBRDD", "UCAM", "KUMC", "PRUCDD")
-  # fmt: skip
-  tasks <- c("ntgedsd", "dld", "npi", "reiss", "dsmse", "recall", "iq", "cancellation", "verbal", "tbatgs", "blockwisc")
+  tasks <- unique(equations[, c("name", "task")])
 
   # Can merge codebook labels when there are fewer changes
   #cb <- purrr::map_dfr(tasks, ~ get_codebook(abcds, !!.x))
 
-  assessments_by_task <-
-    tasks |>
-    purrr::map(~ check_equations(task = !!.x, equations = equations)) |>
-    `names<-`(tasks)
+  # Fetch eval_date
+  eval <- atriReporter::get_demographics(de_eval_date)
+
+  id_cols <- c("subject_label", "site_initials", "event_code")
+
+  all_assessments <-
+    tasks[["task"]] |>
+    purrr::map_dfr(.f = function(x) {
+      check_equations(task = !!x, equations = equations) |>
+        dplyr::mutate(
+          task = !!x,
+          name = setNames(tasks[["name"]], tasks[["task"]])[task]
+        )
+    }) |>
+    dplyr::relocate(name, task, .before = "variable") |>
+    # fmt: skip
+    dplyr::right_join(x = eval[, c(id_cols, "de_eval_date")], y = _, by = id_cols)
 
   if (by_site) {
-    all_assessments <-
-      purrr::imap_dfr(
-        assessments_by_task,
-        ~ dplyr::mutate(.x, task = .y, )
-      ) |>
-      dplyr::relocate(task, .before = variable)
-
     assessments_by_site <-
       sites |>
       purrr::map(~ all_assessments[all_assessments$site_initials == .x, ]) |>
@@ -267,8 +274,12 @@ check_all_equations <- function(
   }
 
   if (by_task & writeFile & !is.null(outdir)) {
+    assessments_by_task <-
+      tasks[["task"]] |>
+      purrr::map(~ all_assessments[all_assessments$task == .x, ]) |>
+      `names<-`(tasks[["task"]])
     wb <- openxlsx::createWorkbook()
-    purrr::walk(tasks, .f = function(.x) {
+    purrr::walk(tasks[["task"]], .f = function(.x) {
       openxlsx::addWorksheet(wb, sheet = .x)
       openxlsx::writeData(
         wb,
@@ -295,22 +306,3 @@ check_all_equations <- function(
     }
   }
 }
-
-# devtools::load_all()
-
-# originals <- c(61, 202, 96, 56, 87, 151, 71, 29, 69, 32)
-#  UPITT   UCISOM      MGH    WASHU      UWI      UKY NYSIBRDD     UCAM     KUMC   PRUCDD
-#    61      202       96       56       87      151       71       29       69       32
-
-# checks <- check_all_equations(by_site = TRUE, by_task = FALSE)
-# do.call("c", lapply(checks, nrow)) - originals
-
-# check_all_equations(
-#   by_site = TRUE,
-#   by_task = FALSE,
-#   writeFile = TRUE,
-#   outdir = "/Users/bhelsel/Desktop"
-# )
-
-# equations <- read.csv("inst/extdata/equations.csv")
-# check_equations(recall, equations)
