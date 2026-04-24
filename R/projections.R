@@ -6,6 +6,8 @@
 #' @param projection_no Integer. Target total enrollment count to project onto.
 #'   Current observed proportions are preserved; cell counts are rescaled to
 #'   sum to this value.
+#' @param ... Optional parameters to filter the demographics dataset by to get
+#'  a more focused projection number (e.g., site_label == "KUMC")
 #' @param controls Logical. If `TRUE`, include control subjects in the
 #'   demographic pull. Passed directly to `get_demographics()` and
 #'   `get_disposition()`. Default `FALSE`.
@@ -54,10 +56,11 @@
 
 get_demographic_projections <- function(
   projection_no,
-  site = NULL,
+  ...,
   controls = FALSE,
   include_ltfu = FALSE
 ) {
+  dots <- rlang::enquos(...)
   demo_vars <- c("de_gender", "de_race", "de_ethnicity")
 
   race_categories <- c(
@@ -70,7 +73,11 @@ get_demographic_projections <- function(
 
   # ── Pull & recode demographics ──────────────────────────────────────────────
   # fmt: skip
-  demo_df <- get_demographics(!!!demo_vars, site = site, apply_labels = TRUE, controls = controls)
+  demo_df <- get_demographics(!!!demo_vars, apply_labels = TRUE, controls = controls)
+
+  # Filter out missing values
+  demo_df <- demo_df |>
+    dplyr::filter(!dplyr::if_any(demo_vars, is.na), !!!dots)
 
   # fmt: skip
   demo_df$de_ethnicity <- factor(demo_df$de_ethnicity, levels = c("No", "Yes"), labels = c("Not Hispanic/Latino", "Hispanic/Latino"))
@@ -145,45 +152,57 @@ get_demographic_projections <- function(
   )
 }
 
-# participants <- atriReporter::get_demographic_projections(45, site = "UCAM")
-# controls <- atriReporter::get_demographic_projections(
-#   7,
-#   site = "UCAM",
-#   controls = TRUE
-# )
+# all_participants <- atriReporter::get_demographic_projections(622)
+# all_controls <- atriReporter::get_demographic_projections(50, controls = TRUE)
 
-# originals <- dplyr::bind_rows(participants$Original, controls$Original)
-# projections <- dplyr::bind_rows(participants$Projected, controls$Projected)
+# # fmt: skip
+# ucam_participants <- atriReporter::get_demographic_projections(45, site_initials == "UCAM")
+# # fmt: skip
+# ucam_controls <- atriReporter::get_demographic_projections(6, site_initials == "UCAM", controls = TRUE)
 
-# projections |>
-#   dplyr::mutate(
-#     Group = c(rep("Participants", 9), rep("Controls", 9)),
-#     Category = gsub("/.*British$", "", Category),
-#     # fmt: skip
-#     Category = ifelse(Category == "Black", "Black or African American", Category)
-#   ) |>
-#   flextable::as_grouped_data(groups = "Group") |>
-#   flextable::as_flextable(hide_grouplabel = TRUE) |>
-#   flextable::set_header_labels(
-#     values = c("", rep(c("Female", "Male"), 2), "Totals")
-#   ) |>
-#   flextable::add_header_row(
-#     values = c("", "Not Hispanic/Latino", "Hispanic/Latino", ""),
-#     colwidths = c(1, 2, 2, 1)
-#   ) |>
-#   atriReporter:::ft_add_abcds_theme(grouped_column = TRUE) |>
-#   flextable::width(j = 1, width = 3) |>
-#   flextable::width(j = 2:6, width = 1) |>
-#   flextable::bold(i = ~ is.na(Category)) |>
-#   flextable::padding(padding = 2) |>
-#   flextable::padding(i = ~ !is.na(Category), j = 1, padding.left = 10) |>
-#   flextable::save_as_docx(
-#     path = "/Users/bhelsel/Desktop/projections.docx",
-#     pr_section = officer::prop_section(
-#       page_size = officer::page_size(
-#         orient = "landscape",
-#         width = 8.3,
-#         height = 11.7
-#       )
+# # fmt: skip
+# all_minus_ucam_participants <- atriReporter::get_demographic_projections(620-45, site_initials != "UCAM")
+# # fmt: skip
+# all_minus_ucam_controls <- atriReporter::get_demographic_projections(50-5.5, site_initials != "UCAM")
+
+# create_table <- function(participants, controls) {
+#   #originals <- dplyr::bind_rows(participants$Original, controls$Original)
+#   projections <- dplyr::bind_rows(participants$Projected, controls$Projected)
+
+#   projections |>
+#     dplyr::mutate(
+#       Group = c(rep("Participants", 9), rep("Controls", 9)),
+#       Category = gsub("/.*British$", "", Category),
+#       # fmt: skip
+#       Category = ifelse(Category == "Black", "Black or African American", Category)
+#     ) |>
+#     flextable::as_grouped_data(groups = "Group") |>
+#     flextable::as_flextable(hide_grouplabel = TRUE) |>
+#     flextable::set_header_labels(
+#       values = c("", rep(c("Female", "Male"), 2), "Totals")
+#     ) |>
+#     flextable::add_header_row(
+#       values = c("", "Not Hispanic/Latino", "Hispanic/Latino", ""),
+#       colwidths = c(1, 2, 2, 1)
+#     ) |>
+#     atriReporter:::ft_add_abcds_theme(grouped_column = TRUE) |>
+#     flextable::width(j = 1, width = 3) |>
+#     flextable::width(j = 2:6, width = 1) |>
+#     flextable::bold(i = ~ is.na(Category)) |>
+#     flextable::padding(padding = 2) |>
+#     flextable::padding(i = ~ !is.na(Category), j = 1, padding.left = 10)
+# }
+
+# flextable::save_as_docx(
+#   create_table(all_participants, all_controls),
+#   create_table(ucam_participants, ucam_controls),
+#   create_table(all_minus_ucam_participants, all_minus_ucam_controls),
+#   path = "/Users/bhelsel/Desktop/projections.docx",
+#   pr_section = officer::prop_section(
+#     page_size = officer::page_size(
+#       orient = "landscape",
+#       width = 8.3,
+#       height = 11.7
 #     )
 #   )
+# )

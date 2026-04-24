@@ -6,7 +6,7 @@
 \usage{
 get_demographic_projections(
   projection_no,
-  site = NULL,
+  ...,
   controls = FALSE,
   include_ltfu = FALSE
 )
@@ -15,6 +15,9 @@ get_demographic_projections(
 \item{projection_no}{Integer. Target total enrollment count to project onto.
 Current observed proportions are preserved; cell counts are rescaled to
 sum to this value.}
+
+\item{...}{Optional parameters to filter the demographics dataset by to get
+a more focused projection number (e.g., site_label == "KUMC")}
 
 \item{controls}{Logical. If \code{TRUE}, include control subjects in the
 demographic pull. Passed directly to \code{get_demographics()} and
