@@ -149,6 +149,7 @@ atri_get <- function(server, token) {
 #' @importFrom cli cli_abort
 #' @importFrom glue glue
 #' @importFrom readxl read_excel
+#' @importFrom tidyr unnest_wider
 
 get_atri_data <- function(response, xlsx = FALSE) {
   status <- httr2::resp_status(response)
@@ -167,6 +168,11 @@ get_atri_data <- function(response, xlsx = FALSE) {
       if (type == "application/json") {
         data <- jsonlite::fromJSON(response)$data
         colnames(data) <- to_snake_case(colnames(data))
+        data <- data |>
+          tidyr::unnest_wider(
+            dplyr::where(is.data.frame),
+            names_sep = "_"
+          )
       } else if (type == "application/force-download") {
         data <- readr::read_csv(
           response,
@@ -259,14 +265,12 @@ get_atri_files <- function(study, topic, topic_code, ..., site = NULL) {
 
   if (s3) {
     url <- paste0(server, page_size)
-    return <- "public_api"
+    data <- memoise_atri_get(url, token)[, "public_api", drop = TRUE]
   } else {
-    url <- server
-    return <- c("label", "code")
+    data <- memoise_atri_get(server, token)
   }
 
-  data <- memoise_atri_get(url, token)
-  return(data[, return, drop = TRUE])
+  return(data)
 }
 
 #' Upload a file to the ATRI API
@@ -350,7 +354,7 @@ post_atri_files <- function(
     }
   )
 
-  if (!is.null(code)) {
+  if (!rlang::is_empty(code)) {
     server <- get_atri_server(!!study, files, !!code)
     message(server)
     body <- list(
@@ -378,7 +382,7 @@ post_atri_files <- function(
     httr2::req_headers(
       Authorization = token
     ) %>%
-    httr2::req_body_multipart(!!!body) |>
+    httr2::req_body_multipart(!!!body) %>%
     httr2::req_perform()
 
   return(response)
@@ -457,4 +461,99 @@ import_atri_file <- function(
   data <- memoise_atri_get(server, token)
 
   return(data)
+}
+
+#' Delete a File from the ATRI API
+#'
+#' Deletes a file from the ATRI data repository based on a matching file label.
+#' The function first checks for an existing file using \code{get_atri_files()},
+#' extracts the corresponding file code, and then issues a DELETE request via
+#' the ATRI API.
+#'
+#' @param study Unquoted study name (e.g., \code{abcds}, \code{trcds}).
+#' @param topic Unquoted topic name (e.g., \code{s3_archive}, \code{s3_topic}, \code{topics}).
+#' @param topic_code Unquoted topic code (e.g., \code{data_lake}, \code{data_pond_brain_health_report}).
+#' @param site Character string indicating the site code.
+#' @param label Character string specifying the file label to delete.
+#'
+#' @details
+#' This function:
+#' \enumerate{
+#'   \item Retrieves an API token using \code{get_atri_token()}.
+#'   \item Queries existing files via \code{get_atri_files()}.
+#'   \item Matches the provided \code{label} to identify the file code.
+#'   \item Constructs the appropriate ATRI API endpoint using \code{get_atri_server()}.
+#'   \item Sends a DELETE request using \pkg{httr2}.
+#' }
+#'
+#' If no matching file is found, the function silently skips deletion.
+#'
+#' @return
+#' An \code{httr2_response} object returned by \code{httr2::req_perform()}.
+#'
+#' @examples
+#' \dontrun{
+#' delete_atri_files(
+#'   study = abcds,
+#'   topic = s3_archive,
+#'   topic_code = data_lake,
+#'   site = "KUMC",
+#'   label = "my_report.pdf"
+#' )
+#' }
+#'
+#' @importFrom rlang ensym is_empty
+#' @importFrom httr2 request req_method req_headers req_body_json req_perform
+#'
+#' @export
+
+delete_atri_files <- function(
+  study,
+  topic,
+  topic_code,
+  site,
+  label,
+  reason_for_trash = "Report is no longer needed"
+) {
+  # abcds, trcds, test_trcds
+  study <- rlang::ensym(study)
+  token <- get_atri_token(!!study)
+  # s3_archive, s3_topic, topics
+  topic <- rlang::ensym(topic)
+  # data_lake, data_pond_brain_health_report, transfer-kansas-brain-health-report
+  topic_code <- rlang::ensym(topic_code)
+
+  # Check for existing file
+  code <- tryCatch(
+    {
+      existing <- get_atri_files(!!study, !!topic, !!topic_code, site = site)
+      indx <- which(existing$label == label)
+      existing[["code"]][indx]
+    },
+    error = function(e) {
+      return(NULL)
+    }
+  )
+
+  if (!rlang::is_empty(code)) {
+    server <- get_atri_server(!!study, files, !!code, delete)
+    message(server)
+    body <- list(
+      topic_code = as.character(topic_code),
+      site_code = site,
+      file_code = code,
+      reason_for_trash = reason_for_trash
+    )
+  }
+
+  response <-
+    httr2::request(server) %>%
+    httr2::req_method("DELETE") %>%
+    httr2::req_headers(
+      Authorization = token
+    ) %>%
+    httr2::req_body_json(body) %>%
+    httr2::req_perform()
+
+  return(response)
 }
