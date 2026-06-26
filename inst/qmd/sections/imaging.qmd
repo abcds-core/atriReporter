@@ -2,7 +2,6 @@
 #| echo: false
 #| eval: !expr (params$imaging_scan_counts) | (params$imaging_scan_counts_controls)
 #| results: asis
-
 atriReporter:::format_quarto("Imaging Type by Number of Scans", "subsection")
 
 count_imaging <- function(
@@ -111,8 +110,6 @@ imaging_scan_counts %>%
   flextable::bold(i = ~ !is.na(Person))
 
 atriReporter:::format_quarto(type = "newpage")
-
-
 ```
 
 
@@ -120,7 +117,6 @@ atriReporter:::format_quarto(type = "newpage")
 #| echo: false
 #| eval: !expr (params$mri_sequence_counts) | (params$mri_sequence_counts_controls)
 #| results: asis
-
 atriReporter:::format_quarto("MRI Sequences by Number of Scans", "subsection")
 
 # params <- list()
@@ -212,7 +208,6 @@ mriseq_counts %>%
   flextable::bold(i = ~ !is.na(Person))
 
 atriReporter:::format_quarto(type = "newpage")
-
 ```
 
 
@@ -221,7 +216,6 @@ atriReporter:::format_quarto(type = "newpage")
 #| echo: false
 #| eval: !expr params$imaging_scan_counts_by_site
 #| results: asis
-
 atriReporter:::format_quarto("Amyloid PET Scans by Site", "subsection")
 
 atri_imaging <-
@@ -264,12 +258,10 @@ atri_imaging %>%
   flextable::width(j = 2:4, width = 2.25 / 3)
 
 atriReporter:::format_quarto(type = "newpage")
-
 ```
 
 
 ```{r}
-
 # lonidir <- '/Users/bhelsel/Desktop/Data/ABCDS LONI DATA'
 
 # list.files(lonidir, "MRI", full.names = TRUE)
